@@ -1,0 +1,18 @@
+<?php
+
+return [
+    'id' => 'garage-todo',
+    'baseDir' => __DIR__ . DIRECTORY_SEPARATOR .'..',
+    'controllersNamespace' => "\\controllers",
+    'baseController' => 'site',
+    'errorAction' => 'site/error',
+    'db' => [
+        'host' => "127.0.0.1",
+        'user' => 'root',
+        'password' => '123',
+        'db_name' => 'garage-todo'
+    ],
+    'request' => [
+        'class' => 'core\components\Request'
+    ]
+];
