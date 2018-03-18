@@ -5,11 +5,13 @@
 /*@import url("https://fonts.googleapis.com/css?family=Slabo+27px");*/
 
 html, body{
-    background: url(../images/background.png);
+    background: url(../images/background.png) repeat-x fixed;
+    background-size: contain;
     height: 100%;
 }
 
 .wrapper{
+    width: 600px;
     margin: auto;
     display: table;
     height: 100%;
@@ -45,6 +47,25 @@ div.container{
     margin-bottom: 30px;
 }
 
+.deadline-wrapper{
+    display: none;
+}
+
+input.deadline{
+    margin: 2px 0 2px 0;
+    line-height: 14px;
+}
+
+.deadline-btn{
+    margin-bottom: 3px;
+    margin-left: 15px;
+    margin-right: 15px;
+}
+
+.deadline-display{
+    color: green;
+}
+
 .title{
     background-image: url(../images/project.png);
     color: #fff;
@@ -77,6 +98,25 @@ div.container{
     margin: 0 10px;
     cursor: pointer;
 }
+
+.wrapper-button-move:nth-child(1){
+    margin-top: 6px;
+}
+
+.button-move-top, .button-move-bottom{
+    display: inline-block;
+    width: 14px;
+    height: 7px;
+}
+
+.button-move-top{
+    background: url(../images/move.png);
+}
+
+.button-move-bottom{
+    background: url(../images/move.png) center -7px no-repeat;
+}
+
 .row-add-task{
     width: 110%;
     background-color: #ebedec;
@@ -99,6 +139,10 @@ label{
 
 .table{
     margin-bottom: 0;
+}
+
+tr:hover{
+    background-color: #fbfbd3;
 }
 
 tr{

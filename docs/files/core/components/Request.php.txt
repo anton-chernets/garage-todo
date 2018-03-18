@@ -1,0 +1,117 @@
+<?php
+
+namespace core\components;
+
+use core\helpers\Inflector;
+
+class Request
+{
+    protected $uri;
+
+    protected $_method;
+
+    /**
+     * methods default
+     */
+    public $isGet = false;
+
+    public $isPost = false;
+
+    public $isDelete = false;
+
+    public $isPut = false;
+
+    public function __construct()
+    {
+        $this->_method = $_SERVER['REQUEST_METHOD'];
+        $this->uri = $_SERVER['REQUEST_URI'];
+
+        $this->parseMethod();
+    }
+
+    protected function parseMethod()
+    {
+        switch ($this->_method){
+            case "GET" : $this->isGet = true;
+                break;
+            case "POST" : $this->isPost = true;
+                break;
+            case "PUT" : $this->isPut = true;
+                break;
+            case "DELETE" : $this->isDelete = true;
+                break;
+            default: break;
+        }
+    }
+
+    /**
+     * @param string $uri
+     * @return string
+    */
+    public function getControllerNamespace($uri = null)
+    {
+        if($uri){
+            $arr = $this->queryStringToArray($uri);
+        }else{
+            $arr = $this->queryStringToArray($this->uri);
+        }
+
+        $arrCount = count($arr);
+        if($arrCount <= 2) {
+            return !empty($arr[0]) ? "\\".Inflector::id2camel($arr[0]) : '';
+        } else {
+            $namespace = '';
+            for($i = 0; $i < ($arrCount -1); ++$i){
+                if($i == ($arrCount -2)){
+                    $namespace .= "\\".Inflector::id2camel($arr[$i]);
+                }else{
+                    $namespace .= "\\".$arr[$i];
+                }                
+            }    
+            return $namespace;
+        }
+    }
+
+    /**
+     * @return boolean
+    */
+    public function hasQueryString()
+    {
+        return (boolean)!empty(ltrim($this->uri, "/"));
+    }
+
+    /**
+     * @param string $uri
+     * @return string|null
+     */
+    public function getControllerAction($uri = null)
+    {
+        if($uri){
+            $arr = $this->queryStringToArray($uri);
+        }else{
+            $arr = $this->queryStringToArray($this->uri);
+        }
+        $arrCount = count($arr);
+        if($arrCount >= 2) {
+            return !empty($arr[$arrCount-1]) ? $arr[$arrCount-1] : null;
+        }
+        return null;
+    }
+
+    /**
+     * @param string $str
+     * @return array
+    */
+    protected function queryStringToArray($str)
+    {
+        return explode('/', ltrim($str, "/"));
+    }
+
+    /**
+     * @param string $url
+     */
+    public function redirectTo($url)
+    {
+        header("Location: ".$url);
+    }
+}

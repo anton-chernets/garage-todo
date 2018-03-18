@@ -1,0 +1,107 @@
+<?php
+
+namespace controllers;
+
+use core\Application;
+use core\base\WebController;
+use models\Tasks;
+
+class TaskController extends WebController
+{
+    public function actionAdd()
+    {
+        $app = Application::getInstance();
+        if(isset($_POST['name']) && isset($_POST['project_id'])) {
+            $task_max_priority = $app->db->one(Tasks::findMaxPriorityByProjectId($_POST['project_id']));
+            isset($task_max_priority) ? $priority = $task_max_priority['priority'] + 1 : $priority = 1;
+            if($app->db->setSql(Tasks::insetSQL($_POST['name'], date('Y-m-d H:m:s'), $_POST['project_id'], $priority))->exec())
+                echo "task saved";
+            else
+                echo "task not saved";
+        } else
+            echo "Enter data not correct";
+    }
+
+    public function actionRem()
+    {
+        $app = Application::getInstance();
+        if(isset($_POST['id'])) {
+            if($app->db->setSql(Tasks::removeTask($_POST['id']))->exec())
+                echo "task removed";
+            else
+                echo "task not removed";
+
+        } else
+            echo "Enter not correct";
+    }
+
+    public function actionUpdate()
+    {
+        $app = Application::getInstance();
+        if(isset($_POST['id']) && isset($_POST['name'])) {
+            if($app->db->setSql(Tasks::updateTaskName($_POST['id'], $_POST['name'], date('Y-m-d H:m:s')))->exec())
+                echo "task edited";
+            else
+                echo "task not edited";
+        } else
+            echo "Enter not correct";
+    }
+
+    public function actionComplete()
+    {
+        $app = Application::getInstance();
+        if(isset($_POST['id'])) {
+            $result = $app->db->one(Tasks::findById($_POST['id']));
+            $status = 0;
+            if(!$result['status'])
+                $status = 1;
+            if($app->db->setSql(Tasks::completeTask($_POST['id'], $status, date('Y-m-d H:m:s')))->exec())
+                echo "status change";
+            else
+                echo "status not change";
+        } else
+            echo "Enter not correct";
+    }
+
+    public function actionPriorityPlus()
+    {
+        $app = Application::getInstance();
+        if(isset($_POST['id'])) {
+            $result = $app->db->one(Tasks::findById($_POST['id']));
+            $result_before = $app->db->one(Tasks::findBeforePriorityByProjectId($result['project_id'], $result['priority']));
+            if(isset($result_before)){
+                if($app->db->setSql(Tasks::updateTaskPriority($_POST['id'], $result_before['priority'], date('Y-m-d H:m:s')))->exec() && $app->db->setSql(Tasks::updateTaskPriority($result_before['id'], $result['priority'], date('Y-m-d H:m:s')))->exec()){
+                    echo "priority update";
+                } else
+                    echo "priority not update";
+            } else
+                echo "it's max priority";
+        } else
+            echo "Enter not correct";
+    }
+
+    public function actionPriorityMines()
+    {
+        $app = Application::getInstance();
+        if(isset($_POST['id'])) {
+            $result = $app->db->one(Tasks::findById($_POST['id']));
+            $result_before = $app->db->one(Tasks::findAfterPriorityByProjectId($result['project_id'], $result['priority']));
+            if(isset($result_before)){
+                if($app->db->setSql(Tasks::updateTaskPriority($_POST['id'], $result_before['priority'], date('Y-m-d H:m:s')))->exec() && $app->db->setSql(Tasks::updateTaskPriority($result_before['id'], $result['priority'], date('Y-m-d H:m:s')))->exec()){
+                    echo "priority update";
+                } else
+                    echo "priority not update";
+            } else
+                echo "it's min priority";
+        } else
+            echo "Enter not correct";
+    }
+
+    public function actionGetAll()
+    {
+        $app = Application::getInstance();
+        $result = $app->db->all(Tasks::findAll());
+        echo(json_encode($result));
+    }
+
+}

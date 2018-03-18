@@ -1,0 +1,113 @@
+<?php
+
+namespace core;
+
+use core\components\Session;
+use core\components\Request;
+use core\components\Connector;
+use core\exceptions\InvalidApplicationConfig;
+
+/**
+ * @property $storage \core\storage\FileConnector
+ * @property $db \core\storage\DbConnector
+*/
+class Application
+{
+    private static $instance;
+
+    public $id;
+
+    public $session;
+
+    public $baseDir;
+
+    public $controllersNamespace;
+
+    public $baseController;
+    
+    public $errorAction;
+
+    public $db;
+
+    public $request;
+
+    /**
+     * @param array $config
+    */
+    public function __construct(array $config = [])
+    {
+        $this->validateConfig($config);
+
+        $this->db = new Connector($config['db']['host'], $config['db']['user'], $config['db']['password'], $config['db']['db_name']);
+
+        foreach ($config as $key => $param) {
+            if(is_array($param)) {
+                if(!empty($param['class'])){
+                    $newArray = $param;
+                    unset($newArray['class']);
+                    $obj = new $param['class']($newArray);
+                    $this->{$key} = $obj;
+                }
+            }else{
+                $this->{$key} = $param;
+            }
+        }
+
+        $this->request  = new Request();
+        $this->session = new Session();
+        $this->session->open();
+
+        self::$instance = $this;
+    }
+
+    /**
+     * @return  Application
+    */
+    public static function getInstance()
+    {
+        return self::$instance;
+    }
+
+    /**
+     * @param array $config
+     */
+    protected function validateConfig(array $config)
+    {
+        foreach ($config as $c) {
+            /** @TODO*/
+        }
+//        throw new InvalidApplicationConfig("Invalid application config `main` ", 12345);//second arg - code
+    }
+
+    /**
+     * @return integer
+    */
+    public function run()
+    {
+        $defaultController = $this->request->hasQueryString() ? null : $this->baseController;
+        $controllerNamespace = $this->request->getControllerNamespace($defaultController);
+        $id = strtolower(trim($controllerNamespace, '\\'));
+        $controllerNamespace = $this->controllersNamespace . $controllerNamespace . 'Controller';
+        if(class_exists($controllerNamespace)){
+            /** @var $controller \core\base\WebController */
+            $controller = new $controllerNamespace($id , $this->baseDir);
+            $controller->runAction($this->request->getControllerAction($defaultController));
+        }else{
+            $this->errorActionLaunch();
+        }
+        
+        return 1;
+    }
+
+    /**
+     * @return string
+     */
+    protected function errorActionLaunch()
+    {
+        $arr = explode('/', ltrim($this->errorAction, "/"));
+        $controller = "\\controllers\\".ucfirst($arr[0])."Controller";
+        $action = "action".ucfirst($arr[1]);
+        $controller = new $controller;
+        return $controller->{$action}();
+    }
+}

@@ -4,21 +4,29 @@ namespace models;
 
 class User
 {
-    public $id;
-    
-    public $email;
-    
-    public $password;
-    
-    public $created_at;
 
+    /**
+     *
+     * @param string $email
+     * @param string $password
+     * @param string $created_at
+     *
+     * @return string
+     */
     public static function insetSQL($email, $password, $created_at)
     {
         return "INSERT INTO `users` (`email`, `password`, `created_at`) VALUES ('".$email."', '".$password."', '".$created_at."');";
     }
 
+    /**
+     *
+     * @param string $email
+     *
+     * @return string
+     */
     public static function findByEmail($email)
     {
         return "SELECT * from users where email = '".$email."'";
     }
+
 }

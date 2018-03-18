@@ -1,0 +1,268 @@
+<?php
+
+namespace core\components;
+
+
+class Session
+{
+    /**
+     * @var array parameter-value pairs to override default session cookie parameters that are used for session_set_cookie_params() function
+     * Array may have the following possible keys: 'lifetime', 'path', 'domain', 'secure', 'httponly'
+     * @see http://www.php.net/manual/en/function.session-set-cookie-params.php
+     */
+    private $_cookieParams = ['httponly' => true];
+
+
+    /**
+     * Initializes the application component.
+     * This method is required by IApplicationComponent and is invoked by application.
+     */
+    public function __construct()
+    {
+        register_shutdown_function([$this, 'close']);
+    }
+
+    /**
+     * Check activity session for this process
+    */
+    public function getIsActive()
+    {
+        return session_status() == PHP_SESSION_ACTIVE;
+    }
+    
+    public function getCookieParams()
+    {
+        return array_merge(session_get_cookie_params(), array_change_key_case($this->_cookieParams));
+    }
+
+    /**
+     * Starts the session.
+     */
+    public function open()
+    {
+        if ($this->getIsActive()) {
+            return;
+        }
+
+   //     $this->registerSessionHandler();
+
+   //     $this->setCookieParamsInternal();
+
+        @session_start();
+
+        if (!$this->getIsActive()) {
+            $error = error_get_last();
+            throw new \Exception($error['message'] ? $error['message'] : 'Failed to start session.');
+        }
+    }
+
+    /**
+     * Registers session handler.
+     */
+    protected function registerSessionHandler()
+    {
+        //@session_set_save_handler($this->handler, false);
+
+        @session_set_save_handler(
+            [$this, 'openSession'],
+            [$this, 'closeSession'],
+            [$this, 'readSession'],
+            [$this, 'writeSession'],
+            [$this, 'destroySession'],
+            [$this, 'gcSession']
+        );
+    }
+
+    /**
+     * Sets the session cookie parameters.
+     * This method is called by [[open()]] when it is about to open the session.
+     * @see http://us2.php.net/manual/en/function.session-set-cookie-params.php
+     */
+    private function setCookieParamsInternal()
+    {
+        $data = $this->getCookieParams();
+        extract($data);
+        if (isset($lifetime, $path, $domain, $secure, $httponly)) {
+            session_set_cookie_params($lifetime, $path, $domain, $secure, $httponly);
+        } else {
+            throw new \Exception('Please make sure cookieParams contains these elements: lifetime, path, domain, secure and httponly.');
+        }
+    }
+
+    /**
+     * Ends the current session and store session data.
+     */
+    public function close()
+    {
+        if ($this->getIsActive()) {
+            @session_write_close();
+        }
+    }
+
+    /**
+     * Frees all session variables and destroys all data registered to a session.
+     */
+    public function destroy()
+    {
+        if ($this->getIsActive()) {
+            @session_unset();
+            $sessionId = session_id();
+            @session_destroy();
+            @session_id($sessionId);
+        }
+    }
+
+    /**
+     * Gets the session ID.
+     * This is a wrapper for [PHP session_id()](http://php.net/manual/en/function.session-id.php).
+     * @return string the current session ID
+     */
+    public function getId()
+    {
+        return session_id();
+    }
+
+    /**
+     * Sets the session ID.
+     * This is a wrapper for [PHP session_id()](http://php.net/manual/en/function.session-id.php).
+     * @param string $value the session ID for the current session
+     */
+    public function setId($value)
+    {
+        session_id($value);
+    }
+
+    /**
+     * Updates the current session ID with a newly generated one .
+     * Please refer to <http://php.net/session_regenerate_id> for more details.
+     * @param boolean $deleteOldSession Whether to delete the old associated session file or not.
+     */
+    public function regenerateID($deleteOldSession = false)
+    {
+        // add @ to inhibit possible warning due to race condition
+        // https://github.com/yiisoft/yii2/pull/1812
+        @session_regenerate_id($deleteOldSession);
+    }
+
+    /**
+     * Gets the name of the current session.
+     * This is a wrapper for [PHP session_name()](http://php.net/manual/en/function.session-name.php).
+     * @return string the current session name
+     */
+    public function getName()
+    {
+        return session_name();
+    }
+
+    /**
+     * Sets the name for the current session.
+     * This is a wrapper for [PHP session_name()](http://php.net/manual/en/function.session-name.php).
+     * @param string $value the session name for the current session, must be an alphanumeric string.
+     * It defaults to "PHPSESSID".
+     */
+    public function setName($value)
+    {
+        session_name($value);
+    }
+
+    /**
+     * Gets the current session save path.
+     * This is a wrapper for [PHP session_save_path()](http://php.net/manual/en/function.session-save-path.php).
+     * @return string the current session save path, defaults to '/tmp'.
+     */
+    public function getSavePath()
+    {
+        return session_save_path();
+    }
+
+    /**
+     * Sets the current session save path.
+     * This is a wrapper for [PHP session_save_path()](http://php.net/manual/en/function.session-save-path.php).
+     * @param string $path the current session save path. This can be either a directory name or a path alias.
+     * @throws \Exception if the path is not a valid directory
+     */
+    public function setSavePath($path)
+    {
+        if (is_dir($path)) {
+            session_save_path($path);
+        } else {
+            throw new \Exception("Session save path is not a valid directory: $path");
+        }
+    }
+
+    /**
+     * Sets the session cookie parameters.
+     * The cookie parameters passed to this method will be merged with the result
+     * of `session_get_cookie_params()`.
+     * @param array $value cookie parameters, valid keys include: `lifetime`, `path`, `domain`, `secure` and `httponly`.
+     * @see http://us2.php.net/manual/en/function.session-set-cookie-params.php
+     */
+    public function setCookieParams(array $value)
+    {
+        $this->_cookieParams = $value;
+    }
+
+    /**
+     * Returns the session variable value with the session variable name.
+     * If the session variable does not exist, the `$defaultValue` will be returned.
+     * @param string $key the session variable name
+     * @param mixed $defaultValue the default value to be returned when the session variable does not exist.
+     * @return mixed the session variable value, or $defaultValue if the session variable does not exist.
+     */
+    public function get($key, $defaultValue = null)
+    {
+        $this->open();
+        return isset($_SESSION[$key]) ? $_SESSION[$key] : $defaultValue;
+    }
+
+    /**
+     * Adds a session variable.
+     * If the specified name already exists, the old value will be overwritten.
+     * @param string $key session variable name
+     * @param mixed $value session variable value
+     */
+    public function set($key, $value)
+    {
+        $this->open();
+        $_SESSION[$key] = $value;
+    }
+
+    /**
+     * Removes a session variable.
+     * @param string $key the name of the session variable to be removed
+     * @return mixed the removed value, null if no such session variable.
+     */
+    public function remove($key)
+    {
+        $this->open();
+        if (isset($_SESSION[$key])) {
+            $value = $_SESSION[$key];
+            unset($_SESSION[$key]);
+
+            return $value;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Removes all session variables
+     */
+    public function removeAll()
+    {
+        $this->open();
+        foreach (array_keys($_SESSION) as $key) {
+            unset($_SESSION[$key]);
+        }
+    }
+
+    /**
+     * @param mixed $key session variable name
+     * @return boolean whether there is the named session variable
+     */
+    public function has($key)
+    {
+        $this->open();
+        return isset($_SESSION[$key]);
+    }
+}

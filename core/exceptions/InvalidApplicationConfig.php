@@ -2,7 +2,4 @@
 
 namespace core\exceptions;
 
-class InvalidApplicationConfig extends \Exception
-{
-    
-}
+class InvalidApplicationConfig extends \Exception{}

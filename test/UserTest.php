@@ -1,6 +1,27 @@
 <?php
 
+require_once __DIR__ .DIRECTORY_SEPARATOR."..".DIRECTORY_SEPARATOR."models".DIRECTORY_SEPARATOR."User.php";
+
 use models\User;
 
-class UserTest extends PHPUnit_Framework_TestCase {}
+class UserTest extends PHPUnit_Framework_TestCase
+{
+    private $user;
 
+    protected function setUp()
+    {
+        $this->user = new User();
+    }
+
+    public function testFindByEmail()
+    {
+        echo "My name " , get_class($this->user) , "\n";
+        is_string(User::findByEmail('some email')) ? $res =  'yes' : $res = 'no';
+        echo __METHOD__ . " returned string : " . $res ;
+    }
+
+    protected function tearDown()
+    {
+    }
+
+}

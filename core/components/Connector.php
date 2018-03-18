@@ -45,7 +45,7 @@ class Connector
     {
         $this->_sql = $str;
         $result = $this->db->query($this->_sql);
-        return $result->fetch_all();
+        return $result->fetch_all($resulttype = MYSQLI_ASSOC);
     }
 
     public function exec()

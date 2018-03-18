@@ -27,8 +27,6 @@ class Application
     
     public $errorAction;
 
-    public $storage;
-
     public $db;
 
     public $request;
@@ -70,13 +68,15 @@ class Application
         return self::$instance;
     }
 
-
+    /**
+     * @param array $config
+     */
     protected function validateConfig(array $config)
     {
         foreach ($config as $c) {
             /** @TODO*/
         }
-        //throw new InvalidApplicationConfig("Invalid application config `main` ", 77777);
+//        throw new InvalidApplicationConfig("Invalid application config `main` ", 12345);//second arg - code
     }
 
     /**
@@ -98,7 +98,10 @@ class Application
         
         return 1;
     }
-    
+
+    /**
+     * @return string
+     */
     protected function errorActionLaunch()
     {
         $arr = explode('/', ltrim($this->errorAction, "/"));
