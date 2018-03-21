@@ -8,6 +8,14 @@ use core\components\Connector;
 use core\exceptions\InvalidApplicationConfig;
 
 /**
+ *
+ * SIMPLE TODO LISTS
+ * Application Back-End or PHP 5.5
+ *
+ * @version 2.0
+ * @author Anton Chernets
+ * @copyright 2018.02
+ *
  * @property $storage \core\storage\FileConnector
  * @property $db \core\storage\DbConnector
 */

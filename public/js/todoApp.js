@@ -1,4 +1,15 @@
-// Модуль
+/**
+ *
+ * SIMPLE TODO LISTS
+ * module todoApp or AngularJS
+ *
+ * @version 2.0
+ * @author Anton Chernets
+ * @copyright 2018.02
+ *
+ * @property $storage \core\storage\FileConnector
+ * @property $db \core\storage\DbConnector
+ */
 var todoApp = angular.module("todoApp", [], function($httpProvider)
 {
     // Используем x-www-form-urlencoded Content-Type

@@ -11,17 +11,22 @@ class UserTest extends PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $this->user = new User();
+        echo "\n My name " , get_class($this->user) , "\n";
+    }
+
+    public function testInsetSQL()
+    {
+        echo __METHOD__ . " returned query string : " . User::insetSQL('some-email@gmail.com', 'passw0rd', date('Y-m-d H:m:s'));
     }
 
     public function testFindByEmail()
     {
-        echo "My name " , get_class($this->user) , "\n";
-        is_string(User::findByEmail('some email')) ? $res =  'yes' : $res = 'no';
-        echo __METHOD__ . " returned string : " . $res ;
+        echo __METHOD__ . " returned string : " . User::findByEmail('some-email@gmail.com');
     }
 
     protected function tearDown()
     {
+        unset($user);
     }
 
 }
