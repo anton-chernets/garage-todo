@@ -1,6 +1,6 @@
 ## Технологии при реализации
 
-Angular JS + самописный PHP framework
+AngularJS + самописный PHP framework
 
 demo: http://q96698wz.bget.ru/
 
